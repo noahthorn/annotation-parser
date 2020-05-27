@@ -4,6 +4,8 @@
 ;; For testing
 (def test-file "stoner-test.html")
 (def test (ts/parse (slurp test-file)))
+(def full-test "stoner-test-full.html")
+(def full-test (ts/parse (slurp full-test)))
 ;; BYREADER NOTES
 ;; No location information is provided for marked passages
 ;; Can verify its BYReader by the Chinese string at the end of file
@@ -34,30 +36,43 @@
   "Output first (and only) annotation into array. Returns empty array if empty-annotation? returns true"
   [passage-div]
   (->> passage-div
-       (first) (:content) (#(second (next %))) (:content) (first) (:content) (first) (:content) (second) (:content) (first)))
-
+       (first) (:content) (#(second (next %))) (:content) (first) (:content) (first) (:content) (second) (:content) (first)
+       (vector)))
 ;; Verification functions
 (defn empty-annotation?
   "Checks if the text of annotation is 'Underline notes'"
   [annotation]
   (= "Underline notes" annotation))
+(defn last-passage?
+  "Checks if given passage is the last in the list"
+  [passage-list]
+  (= nil (get-passage-date passage-list)))
 
-;; Helper functions that combine title, passages, annotations into map
+;; Functions that build the following data structure
 ;; {:title "title"
 ;;     :passages [{:date "date", :text "passage text", :annotations ["first annotation"]}
-;;      {:date "date", :text "second passage", :annotations ["first annotation"]}
+;;      {:date "date", :text "second passage", :annotations ["first annotation"]}]
 ;; }
 (defn put-title
-  "Puts title into map, returns map"
-  [title book-map])
-(defn put-passage
-  "Attaches passage, annotations, and date into map with title, returns map"
-  [passage book-map])
+  "Puts title into map, returns map. First function called to initialize book map."
+  [title]
+  {:title title})
+(defn assemble-passage
+  "Attaches text, annotations, and date into map."
+  [passage-list]
+  {:date (get-passage-date passage-list), :text (get-passage-text passage-list),
+   :annotations (get-passage-annotations passage-list)})
+(defn put-passages
+  "Recursively builds the array of passages from put-passage"
+  [passage-list]
+  (if (last-passage? passage-list) (assemble-passage passage-list)
+      (apply vector (assemble-passage passage-list) (put-passages (rest passage-list)))))
 
 ;; The big cheese; the mondo function; the One
 (defn put-book
-  "Assemble complete map using put-title and put-passage"
-  [soup])
+  "Assemble complete map using put-title and put-passages"
+  [soup]
+  (conj (put-title (get-title soup)) {:passages (put-passages (get-passages soup))}))
 
 ;; Parsing navigation helpers
 (defn get-body
