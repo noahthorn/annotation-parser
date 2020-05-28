@@ -1,15 +1,14 @@
-(ns annotation-parser.byreader
+(ns annotation-parser.readers.byreader
   (:require [annotation-parser.core :as apcore]
             [tupelo.parse.tagsoup :as ts]
             [tupelo.core :as tupelo]))
 ;; For testing
-(def test-file "stoner-test.html")
-(def test (ts/parse (slurp test-file)))
-(def full-test "stoner-test-full.html")
-(def full-test (ts/parse (slurp full-test)))
+(def test-file "test-files/stoner-test.html")
+(def test-soup (ts/parse (slurp test-file)))
+
 
 ;; Declarations
-(declare get-body get-passages)
+(declare get-body get-passages empty-annotation?)
 ;; BYREADER NOTES
 ;; No location information is provided for marked passages
 ;; Can verify its BYReader by the Chinese string at the end of file
@@ -39,9 +38,10 @@
 (defn get-passage-annotations
   "Output first (and only) annotation into array. Returns empty array if empty-annotation? returns true"
   [passage-div]
-  (->> passage-div
+  (let [annotation (->> passage-div
        (first) (:content) (#(second (next %))) (:content) (first) (:content) (first) (:content) (second) (:content) (first)
-       (vector)))
+       (vector))]
+      (if (empty-annotation? (first annotation)) [] annotation)))
 ;; Verification functions
 (defn empty-annotation?
   "Checks if the text of annotation is 'Underline notes'"
@@ -67,11 +67,11 @@
   {:date (get-passage-date passage-list), :text (get-passage-text passage-list),
    :annotations (get-passage-annotations passage-list)})
 (defn put-passages
-  "Recursively builds the array of passages from put-passage. Uses apply to avoid nesting.
-  Final assembled passage is enclosed in array to avoid discontinuity at final apply call."
+  "Constructs a vector containing maps for each marked passage, with date, text, and annotation(s)"
   [passage-list]
-  (if (last-passage? passage-list) [(assemble-passage passage-list)]
-      (apply vector (assemble-passage passage-list) (put-passages (rest passage-list)))))
+  (loop [result [] pl passage-list]
+    (if (last-passage? pl) result
+        (recur (conj result (assemble-passage pl)) (rest pl)))))
 
 ;; The big cheese; the mondo function; the One
 (defn put-book
