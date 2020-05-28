@@ -5,18 +5,21 @@
 (def test-file "stoner-test.html")
 (def full-test-file "stoner-test-full.html")
 
-;; Read file and determine type
+;; Read file and determine type (type determinations are at EoF in prep for more ereader formats)
 (defn html-read
   "Read file, output tagsoup (nested maps)"
-  [file])
-(defn type?
-  "Determine e-reader source by reading tagsoup"
-  [soup])
+  [file]
+  (ts/parse (slurp file)))
 
 ;; Send to appropriate NS
 (defn ns-call
   "Call put-book for appropriate reader"
-  [source-type file])
+  [file]
+  (cond
+    (byreader?) (by/put-book (html-read file))))
 
-;; Receive from appropriate NS and output as JSON:API data
-;; Will probably be a call to another namespace
+;; Type checkers
+(defn byreader?
+  "Check if file is from BYReader"
+  []
+  true)

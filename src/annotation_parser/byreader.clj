@@ -1,11 +1,15 @@
 (ns annotation-parser.byreader
   (:require [annotation-parser.core :as apcore]
-            [tupelo.parse.tagsoup :as ts]))
+            [tupelo.parse.tagsoup :as ts]
+            [tupelo.core :as tupelo]))
 ;; For testing
 (def test-file "stoner-test.html")
 (def test (ts/parse (slurp test-file)))
 (def full-test "stoner-test-full.html")
 (def full-test (ts/parse (slurp full-test)))
+
+;; Declarations
+(declare get-body get-passages)
 ;; BYREADER NOTES
 ;; No location information is provided for marked passages
 ;; Can verify its BYReader by the Chinese string at the end of file
@@ -63,9 +67,10 @@
   {:date (get-passage-date passage-list), :text (get-passage-text passage-list),
    :annotations (get-passage-annotations passage-list)})
 (defn put-passages
-  "Recursively builds the array of passages from put-passage"
+  "Recursively builds the array of passages from put-passage. Uses apply to avoid nesting.
+  Final assembled passage is enclosed in array to avoid discontinuity at final apply call."
   [passage-list]
-  (if (last-passage? passage-list) (assemble-passage passage-list)
+  (if (last-passage? passage-list) [(assemble-passage passage-list)]
       (apply vector (assemble-passage passage-list) (put-passages (rest passage-list)))))
 
 ;; The big cheese; the mondo function; the One
