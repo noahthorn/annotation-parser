@@ -1,9 +1,10 @@
 (ns annotation-parser.core
   (:require [tupelo.parse.tagsoup :as ts]
-            [annotation-parser.readers.byreader :as by]))
+            [annotation-parser.readers.byreader :as by]
+            [annotation-parser.html :as build]))
 
-(def test-file "stoner-test.html")
-(def full-test-file "stoner-test-full.html")
+(def test-file "test-files/stoner-test.html")
+(def full-test-file "test-files/stoner-test-full.html")
 (def batch ["test-files/batch/1.html" "test-files/batch/2.html" "test-files/batch/3.html" "test-files/batch/4.html" "test-files/batch/5.html"])
 
 (declare byreader?)
@@ -25,6 +26,17 @@
 (defn batch-call
   [files]
   (map ns-call files))
+
+;; START output
+;; call html builder
+(defn html-output
+  [books]
+  (build/build-books books))
+
+(defn main
+  ""
+  [html-files]
+  (html-output (batch-call html-files)))
 
 ;; Type checkers
 (defn byreader?
