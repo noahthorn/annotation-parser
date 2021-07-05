@@ -5,5 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [tupelo "0.9.210"]
-                 [hiccup "1.0.5"]]
+                 [hiccup "1.0.5"]
+                 [datascript "1.0.3"]
+                 [compojure "1.6.2"]]
   :repl-options {:init-ns annotation-parser.core})

@@ -1,14 +1,17 @@
 (ns annotation-parser.readers.byreader
-  (:require [annotation-parser.core :as apcore]
-            [tupelo.parse.tagsoup :as ts]
+  (:require [tupelo.parse.tagsoup :as ts]
             [tupelo.core :as tupelo]))
 ;; For testing
 (def test-file "test-files/stoner-test.html")
 (def test-soup (ts/parse (slurp test-file)))
 
+(defn html-read
+  [file]
+  (ts/parse (slurp file)))
 
 ;; Declarations
 (declare get-body get-passages empty-annotation?)
+
 ;; BYREADER NOTES
 ;; No location information is provided for marked passages
 ;; Can verify its BYReader by the Chinese string at the end of file
@@ -16,9 +19,9 @@
 ;; Each passage is nested in a div with :style 'padding-top: 1em; padding-bottom: 1em; '
 ;;
 
-;; Separate soup into book title, passages, annotations
+;; Separate soup into book title, author, passages, annotations
 (defn get-title
-  "Output book title as string"
+  "Output title as string"
   [soup]
   (->> soup
        (get-body) (:content) (first) (:content) (first) (:content) (first) (:content) (first)))
@@ -74,10 +77,14 @@
         (recur (conj result (assemble-passage pl)) (rest pl)))))
 
 ;; The big cheese; the mondo function; the One
+;; NOTE: lil pre function to soup it
 (defn put-book
   "Assemble complete map using put-title and put-passages"
   [soup]
   (conj (put-title (get-title soup)) {:passages (put-passages (get-passages soup))}))
+(defn pre-put-book
+  [file]
+  (put-book (html-read file)))
 
 ;; Parsing navigation helpers
 (defn get-body
